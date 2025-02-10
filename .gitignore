@@ -1,6 +1,13 @@
 *.pdf
 
 
+*.docx
+*.log
+*.tex
+*.html
+*.nb.html
+
+
 # History files
 .Rhistory
 .Rapp.history
