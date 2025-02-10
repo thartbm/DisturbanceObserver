@@ -1,0 +1,47 @@
+---
+title: "Steady State Business"
+author: "Marius 't Hart"
+date: "2025-02-08"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+Loading custom functions for this document (ignoring installing dependencies):
+
+```{r}
+source('R/temp.R')
+```
+
+Load the data into a data frame:
+
+```{r}
+df <- getSteadyStateData()
+# get an idea of what's in there:
+str(df)
+```
+
+Now we run an ANOVA on this data.
+
+
+
+```{r}
+afex::aov_ez(id='participant', dv='steadystate', data=df, within=c('run','instruction','alpha'))
+```
+
+We ran a repeated measures ANOVA on steady state level, using as within-subject factors: run (1 vs. 2), instruction ("ignore" vs. "learn") and alpha (1.0, 0.8, 0.6, 0.4). Greenhouse-Geisser corrections for sphericity are applied where necessary.
+
+First, there is no notable effect of run (F(1,29)=0.07, p=.80, η²<.001). This means we will ignore this factor from here on.
+
+There is a main effect of instruction (F(1,29)=26.26, p<.001, η²=.154) and of alpha (F(1.78,51.62)=22.62, p<.001, η²=.148). There is also an interaction between instruction and alpha (F(1.89,54.78)=16.28, p<.001, η²=.052).
+
+To understand what this means, we plot this part of the data here:
+
+```{r}
+plotAlphaInstructionInteraction()
+```
+So what this shows is that steady state increases for lower alpha's with instructions to learn, and this is suppressed to at or around the visual error size with instructions to ignore.
+
+In both types of instructions we might be seeing larger variation at the lower alpha levels. Not sure what this means: different people respond differently to these strange types of feedback?
+
