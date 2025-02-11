@@ -99,79 +99,79 @@ steadyStateANOVA_posthocs <- function() {
 
 # plotting functions -----
 
-plotRunInstructionInteraction <- function() {
-  
-  df <- getSteadyStateData()
-  
-  run <- c()
-  instruction <- c()
-  
-  avg <- c()
-  CIlo <- c()
-  CIhi <- c()
-  
-  for (runno in c(1,2)) {
-    for (instr in c('ignore','learn')) {
-      
-      sdf <- df[which(df$run == runno & df$instruction == instr),]
-      
-      run <- c(run, runno)
-      instruction <- c(instruction, instr)
-      
-      avg <- c(avg, mean(sdf$steadystate))
-      CI <- Reach::getConfidenceInterval(data=sdf$steadystate)
-      
-      CIlo <- c(CIlo, min(CI))
-      CIhi <- c(CIhi, max(CI))
-      
-    }
-  }
-  
-  colors <- getColors()
-  
-  ndf <- data.frame(run, instruction, avg, CIlo, CIhi)
-  
-  print(ndf)
-  
-  
-  plot(-1000,-1000,
-       main='',xlab='instruction',ylab='steady state [°]',
-       xlim=c(0.75,2.25),ylim=c(0,25),
-       ax=F,bty='n')
-  
-  for (runno in c(1,2)) {
-    
-    idx <- which(ndf$run == runno)
-    X <- c(1,2,2,1)
-    Y <- c(ndf$CIlo[idx],rev(ndf$CIhi[idx]))
-    
-    polygon( x = X,
-             y = Y,
-             border = NA,
-             col=colors$tr[runno])
-    
-  }
-  
-  for (runno in c(1,2)) {
-    
-    idx <- which(ndf$run == runno)
-    lines( x = c(1,2),
-           y = ndf$avg[idx],
-           col = colors$op[runno] )
-    
-  }
-  
-  axis( side = 1, at = c(1,2), labels = c('ignore', 'learn'))
-  axis( side = 2, at = seq(0,25,5))
-  
-  legend( x = 1,
-          y = 25,
-          legend = c('run 1', 'run 2'),
-          lwd = 1,
-          col = colors$op[c(1,2)],
-          bty='n')
-  
-}
+# plotRunInstructionInteraction <- function() {
+#   
+#   df <- getSteadyStateData()
+#   
+#   run <- c()
+#   instruction <- c()
+#   
+#   avg <- c()
+#   CIlo <- c()
+#   CIhi <- c()
+#   
+#   for (runno in c(1,2)) {
+#     for (instr in c('ignore','learn')) {
+#       
+#       sdf <- df[which(df$run == runno & df$instruction == instr),]
+#       
+#       run <- c(run, runno)
+#       instruction <- c(instruction, instr)
+#       
+#       avg <- c(avg, mean(sdf$steadystate))
+#       CI <- Reach::getConfidenceInterval(data=sdf$steadystate)
+#       
+#       CIlo <- c(CIlo, min(CI))
+#       CIhi <- c(CIhi, max(CI))
+#       
+#     }
+#   }
+#   
+#   colors <- getColors()
+#   
+#   ndf <- data.frame(run, instruction, avg, CIlo, CIhi)
+#   
+#   print(ndf)
+#   
+#   
+#   plot(-1000,-1000,
+#        main='',xlab='instruction',ylab='steady state [°]',
+#        xlim=c(0.75,2.25),ylim=c(0,25),
+#        ax=F,bty='n')
+#   
+#   for (runno in c(1,2)) {
+#     
+#     idx <- which(ndf$run == runno)
+#     X <- c(1,2,2,1)
+#     Y <- c(ndf$CIlo[idx],rev(ndf$CIhi[idx]))
+#     
+#     polygon( x = X,
+#              y = Y,
+#              border = NA,
+#              col=colors$tr[runno])
+#     
+#   }
+#   
+#   for (runno in c(1,2)) {
+#     
+#     idx <- which(ndf$run == runno)
+#     lines( x = c(1,2),
+#            y = ndf$avg[idx],
+#            col = colors$op[runno] )
+#     
+#   }
+#   
+#   axis( side = 1, at = c(1,2), labels = c('ignore', 'learn'))
+#   axis( side = 2, at = seq(0,25,5))
+#   
+#   legend( x = 1,
+#           y = 25,
+#           legend = c('run 1', 'run 2'),
+#           lwd = 1,
+#           col = colors$op[c(1,2)],
+#           bty='n')
+#   
+# }
 
 
 plotAlphaInstructionInteraction <- function() {
