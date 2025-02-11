@@ -8,26 +8,45 @@ output:
   pdf_document: default
 ---
 
+First we set up the environment, necessary for this project:
+
+```{r eval=F}
+renv::restore()
+```
+
+Now we can also install a custom package from the lab:
+
+
+```{r}
+library('remotes')
+ip <- installed.packages()
+if ('Reach' %in% ip[,'Package']) {
+  if (ip[which(ip[,'Package'] == 'Reach'),'Version'] < "2023.12.17") {
+    remotes::install_github('thartbm/Reach')
+  }
+} else {
+  remotes::install_github('thartbm/Reach')
+}
+```
+
+
 Loading custom functions for this document (ignoring installing dependencies):
 
 ```{r}
-source('R/temp.R')
+# functions to handle data:
+source('R/data.R')
+# functions to handle participant info, and data selection:
+source('R/participants.R')
+# functions to inspect the steady state across all conditions:
+source('R/steady_state.R')
 ```
 
-Load the data into a data frame:
+The first time one uses a function that analyses steady-state levels, it will try to download the data from OSF first. This might take a while, and when this fails, the rest of the functions can't run.
+
+We run an ANOVA on the staeady state levels:
 
 ```{r}
-df <- getSteadyStateData()
-# get an idea of what's in there:
-str(df)
-```
-
-Now we run an ANOVA on this data.
-
-
-
-```{r}
-afex::aov_ez(id='participant', dv='steadystate', data=df, within=c('run','instruction','alpha'))
+runSteadyStateANOVA()
 ```
 
 We ran a repeated measures ANOVA on steady state level, using as within-subject factors: run (1 vs. 2), instruction ("ignore" vs. "learn") and alpha (1.0, 0.8, 0.6, 0.4). Greenhouse-Geisser corrections for sphericity are applied where necessary.
@@ -44,4 +63,13 @@ plotAlphaInstructionInteraction()
 So what this shows is that steady state increases for lower alpha's with instructions to learn, and this is suppressed to at or around the visual error size with instructions to ignore.
 
 In both types of instructions we might be seeing larger variation at the lower alpha levels. Not sure what this means: different people respond differently to these strange types of feedback?
+
+Nevertheless, we also run some post-hoc tests on contrasts we're interested in, using the Sidak method for controlling for multiple comparisons. This is based on the cell-means from a second ANOVA that only uses the factors `alpha` and `instruction` (as plotted above).
+
+There are a number of contrasts we're interested in, given the results of the ANOVA. This limits the number of comparisons we need to control for, for more power. The first four comparisons are the differences in steady state for the two instructions within each level of alpha. Then we want a comparison between the steady states for successive levels of alpha (0.4 vs. 0.6, 0.6 vs. 0.8, and 0.8 vs. 1.0) within each instruction. This makes for 6 more comparisons for 10 in total.
+
+```{r}
+steadyStateANOVA_posthocs()
+```
+
 
