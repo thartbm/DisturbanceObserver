@@ -16,7 +16,6 @@ renv::restore()
 
 Now we can also install a custom package from the lab:
 
-
 ```{r}
 library('remotes')
 ip <- installed.packages()
@@ -24,11 +23,8 @@ if ('Reach' %in% ip[,'Package']) {
   if (ip[which(ip[,'Package'] == 'Reach'),'Version'] < "2023.12.17") {
     remotes::install_github('thartbm/Reach')
   }
-} else {
-  remotes::install_github('thartbm/Reach')
-}
+} else {remotes::install_github('thartbm/Reach')}
 ```
-
 
 Loading custom functions for this document (ignoring installing dependencies):
 
@@ -41,23 +37,21 @@ source('R/participants.R')
 source('R/steady_state.R')
 ```
 
-The first time one uses a function that analyses steady-state levels, it will try to download the data from OSF first. This might take a while, and when this fails, the rest of the functions can't run.
-
-We run an ANOVA on the staeady state levels:
+We run an ANOVA on the steady state levels:
 
 ```{r}
 runSteadyStateANOVA()
 ```
 
-We ran a repeated measures ANOVA on steady state level, using as within-subject factors: run (1 vs. 2), instruction ("ignore" vs. "learn") and alpha (1.0, 0.8, 0.6, 0.4). Greenhouse-Geisser corrections for sphericity are applied where necessary.
+> We ran a repeated measures ANOVA on steady state level, using as within-subject factors: run (1 vs. 2), instruction ("ignore" vs. "learn") and alpha (1.0, 0.8, 0.6, 0.4). Greenhouse-Geisser corrections for sphericity are applied where necessary.
 
-First, there is no notable effect of run (F(1,29)=0.07, p=.80, η²<.001). This means we will ignore this factor from here on.
+> First, there is no notable effect of run (F(1,29)=0.07, p=.80, η²<.001). This means we will ignore this factor from here on.
 
-There is a main effect of instruction (F(1,29)=26.26, p<.001, η²=.154) and of alpha (F(1.78,51.62)=22.62, p<.001, η²=.148). There is also an interaction between instruction and alpha (F(1.89,54.78)=16.28, p<.001, η²=.052).
+> There is a main effect of instruction (F(1,29)=26.26, p<.001, η²=.154) and of alpha (F(1.78,51.62)=22.62, p<.001, η²=.148). There is also an interaction between instruction and alpha (F(1.89,54.78)=16.28, p<.001, η²=.052).
 
 To understand what this means, we plot this part of the data here:
 
-```{r}
+```{r, fig.width=6, fig.height=6}
 plotAlphaInstructionInteraction()
 ```
 So what this shows is that steady state increases for lower alpha's with instructions to learn, and this is suppressed to at or around the visual error size with instructions to ignore.
@@ -72,4 +66,7 @@ There are a number of contrasts we're interested in, given the results of the AN
 steadyStateANOVA_posthocs()
 ```
 
+In the contrasts (after correcting for multiple corrections) we now see there is only an effect of instructions in the lowest level of alpha (first four lines of the table).
+
+The both in ignore (lines 5-7) and learn (lines 8-10) there is a difference between alpha 0.6 and 0.8, but no other effects. This is not great.
 
