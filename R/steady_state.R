@@ -21,20 +21,126 @@ getColors <- function() {
   
 }
 
+# data processing -----
 
 getSteadyStateData <- function() {
   
-  df <- read.csv('data/steady_state_data.csv')
+  demographics <- read.csv('data/short_demographics.csv', stringsAsFactors = F)
+  
+  # we'll use all of the participants' data (if available):
+  participants <- unique(demographics$participant)
+  
+  # # collect it in here:
+  # participant <- c()
+  # run         <- c()
+  # instruction <- c()
+  # alpha       <- c()
+  # steadystate <- c()
+  
+  steady_states <- NA
+  
+  # loop through participants:
+  for (ppid in participants) {
+    
+    # runfiles <- sprintf('data/summary_performance/%s_run%d_performance.csv', ppid, c(1,2))
+    # print(runfiles)
+    
+    
+    # files_exist <- file.exists(sprintf('data/summary_performance/%s_run%d_performance.csv', ppid, c(1,2)))
+    # print(files_exist)
+    
+    # if (all(file.exists(sprintf('data/summary_performance/%s_run%d_performance.csv', ppid, c(1,2))))) {
+    #   sdf <- getParticipantSteadyStates(ppid)
+    #   # print(sdf)
+    # } else {
+    #   # cat(sprintf('participant does not have 2 runs: %s\n', ppid))
+    #   next
+    # }
+    sdf <- getParticipantSteadyStates(ppid)
+    # add the participants' data to the overall data frame:
+    
+    if (is.data.frame(steady_states)) {
+      steady_states <- rbind( steady_states, sdf)
+    } else {
+      steady_states <- sdf
+    }
+    # print(dim(steady_states))
+    
+  }
+  
+  write.csv(steady_states, 'data/steady_state_data.csv', quote=TRUE, row.names = FALSE)
+  
+  
+}
+
+
+getParticipantSteadyStates <- function(ppid) {
+  
+  # collect it in here:
+  participant <- c()
+  run         <- c()
+  instruction <- c()
+  alpha       <- c()
+  steadystate <- c()
+  rotation    <- c()
+  
+  ppdata <- preProcessParticipant(ppid, baseline='overall')
+  
+  for (runno in c(1,2)) {
+    
+    instructions <- c("ignore", "ignore", "ignore", "ignore", "learn",  "learn",  "learn",  "learn")
+    rotations    <- c(-15,      15,       -15,      15,       -15,      15,       -15,      15)
+    alphas       <- c(1.0,      0.8,      0.6,      0.4,      1.0,      0.8,      0.6,      0.4)
+    
+    labels <- c("ignore_d-15_a1.0",
+                "ignore_d15_a0.8",
+                "ignore_d-15-a0.6",
+                "ignore_d15-a0.4",
+                "learn_d-15_a1.0",
+                "learn_d15_a0.8",
+                "learn_d-15-a0.6",
+                "learn_d15-a0.4")
+    
+    for (ti in c(1:8)) {
+      
+      stdf <- ppdata[[runno]][[labels[ti]]]
+        
+      # stdf <- rdf[which(rdf$label == label),]
+      idx <- rev( which(stdf$rotation == rotations[ti]) )[c(1:20)]
+      # print(labels[ti])
+      # print(idx)
+      asymptote <- mean(stdf$reachdeviation_deg[idx], na.rm=TRUE)
+      # print(asymptote)
+      
+      # collect it in here:
+      participant <- c(participant, ppid)
+      run         <- c(run, runno)
+      instruction <- c(instruction, instructions[ti])
+      alpha       <- c(alpha, alphas[ti])
+      steadystate <- c(steadystate, asymptote)
+      rotation    <- c(rotation, rotations[ti])
+      
+      
+    }
+    
+  }
+  
+  df <- data.frame( participant,
+                       run,
+                       instruction,
+                       alpha,
+                       steadystate,
+                       rotation)
   
   return(df)
-
+  
 }
 
 # statistical analyses -----
 
 runSteadyStateANOVA <- function() {
   
-  df <- getSteadyStateData()
+  df <- read.csv('data/steady_state_data.csv')
   
   my_aov <- afex::aov_ez(id          = 'participant', 
                          dv          = 'steadystate', 
@@ -54,7 +160,7 @@ runSteadyStateANOVA <- function() {
 
 steadyStateANOVA_posthocs <- function() {
   
-  df <- getSteadyStateData()
+  df <- read.csv('data/steady_state_data.csv')
   
   my_aov <- afex::aov_ez(id          = 'participant', 
                          dv          = 'steadystate', 
@@ -93,7 +199,7 @@ steadyStateANOVA_posthocs <- function() {
                           "learn - alpha 0.8 <> 1.0" = lrn_a08_10
   )
   
-  print(contrast(cellmeans, alpha_contrasts, adjust='sidak'))
+  print(emmeans::contrast(cellmeans, alpha_contrasts, adjust='sidak'))
   
 }
 
@@ -176,7 +282,7 @@ steadyStateANOVA_posthocs <- function() {
 
 plotAlphaInstructionInteraction <- function() {
   
-  df <- getSteadyStateData()
+  df <- read.csv('data/steady_state_data.csv')
   
   alpha <- c()
   instruction <- c()
@@ -190,6 +296,7 @@ plotAlphaInstructionInteraction <- function() {
     for (instr in c('ignore','learn')) {
       
       sdf <- df[which(df$alpha == alpha_level & df$instruction == instr),]
+      # print(sdf)
       
       alpha <- c(alpha, alpha_level)
       instruction <- c(instruction, instr)
@@ -203,6 +310,12 @@ plotAlphaInstructionInteraction <- function() {
     }
   }
   
+  # print(data.frame(instruction,
+  #                  alpha,
+  #                  avg,
+  #                  CIlo,
+  #                  CIhi))
+  
   colors <- getColors()
   
   ndf <- data.frame(alpha, instruction, avg, CIlo, CIhi)
@@ -212,7 +325,7 @@ plotAlphaInstructionInteraction <- function() {
   
   plot(-1000,-1000,
        main='',xlab='alpha',ylab='steady state [°]',
-       xlim=c(0.2,1.2),ylim=c(0,40),
+       xlim=c(0.2,1.2),ylim=c(0,45),
        ax=F,bty='n')
   
   lines(x=c(0.35,1.05),y=c(15,15),col='#AAAAAA',lty=1,lw=2)
@@ -249,7 +362,7 @@ plotAlphaInstructionInteraction <- function() {
   }
   
   axis( side = 1, at = alphalevels)
-  axis( side = 2, at = seq(0,40,10))
+  axis( side = 2, at = seq(0,45,15))
   
   legend( x = 0.6,
           y = 40,
